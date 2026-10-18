@@ -1,0 +1,20 @@
+# DOMINIO vem do arquivo .env.
+#  - Domínio real (ex.: vendas.minhaloja.com.br): o Caddy obtém e renova o certificado HTTPS
+#    sozinho (Let's Encrypt). O domínio precisa apontar para o IP do servidor e as portas
+#    80 e 443 precisam estar abertas.
+#  - Rede local sem domínio: use DOMINIO=:80 e COOKIE_SEGURO=0 no .env (HTTP simples).
+
+{$DOMINIO} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Arquivos do frontend com hash no nome podem ficar em cache por um ano.
+	@estaticos path /assets/*
+	header @estaticos Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy app:8000
+}

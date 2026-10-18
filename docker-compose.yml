@@ -1,0 +1,45 @@
+# Rede de Vendas em produção: aplicação + Caddy (HTTPS automático).
+# Passo a passo completo em docs/DEPLOY.md.
+#
+#   cp .env.example .env      # preencha DOMINIO, ADMIN_LOGIN e ADMIN_SENHA
+#   docker compose up -d --build
+
+services:
+  app:
+    build: .
+    image: rede-vendas:latest
+    restart: unless-stopped
+    environment:
+      REDE_VENDAS_DB: /dados/rede_vendas.db
+      REDE_VENDAS_ADMIN_LOGIN: ${ADMIN_LOGIN:?defina ADMIN_LOGIN no arquivo .env}
+      REDE_VENDAS_ADMIN_SENHA: ${ADMIN_SENHA:?defina ADMIN_SENHA no arquivo .env}
+      REDE_VENDAS_COOKIE_SEGURO: ${COOKIE_SEGURO:-1}
+      REDE_VENDAS_DOCS: ${DOCS:-0}
+    volumes:
+      - dados:/dados
+    expose:
+      - "8000" # só o Caddy acessa; a aplicação não fica exposta diretamente
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO:?defina DOMINIO no arquivo .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_dados:/data # certificados HTTPS
+      - caddy_config:/config
+
+volumes:
+  dados: # banco de dados e backups — NÃO apague
+  caddy_dados:
+  caddy_config:

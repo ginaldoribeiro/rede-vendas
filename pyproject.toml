@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rede-vendas"
+version = "0.4.0"
+description = "Gestão de uma rede de lojas: estoque, vendedores, vendas e relatórios"
+requires-python = ">=3.10"
+dependencies = []  # o núcleo e a CLI usam só a biblioteca padrão
+
+[project.optional-dependencies]
+api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
+dev = ["pytest", "ruff", "httpx", "fastapi>=0.115", "uvicorn[standard]>=0.30"]
+
+[project.scripts]
+rede-vendas = "rede_vendas.cli:main"
+
+[tool.setuptools]
+packages = ["rede_vendas"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "N", "PL"]
+
+[tool.ruff.lint.pylint]
+max-args = 6  # conn + 5 parâmetros de domínio
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR2004"]  # valores esperados explícitos são mais legíveis nos testes
